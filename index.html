@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="theme-color" content="#e85d2f" />
+<title>英検3級 会話表現マスター</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js" crossorigin></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+  #root { min-height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div style="font-family:sans-serif;text-align:center;padding:48px 20px;color:#999;">
+    読み込み中…<br><br>
+    <span style="font-size:13px;">（はじめて開くときはインターネット接続が必要です）</span>
+  </div>
+</div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+// ===== 会話表現データ（会話表現編 001〜100・全100個） =====
+const WORDS = [
+  { id: "001", word: "Are you all right?", meaning: "大丈夫ですか。", exA: "You don't look well. Are you all right?", exB: "Yes. I'm just sleepy.", exAJa: "具合がよくなさそうですね。大丈夫ですか。", exBJa: "はい。眠いだけです。", note: "" },
+  { id: "002", word: "Are you ready to order?", meaning: "ご注文はお決まりですか。", exA: "Are you ready to order?", exB: "Yes. I'll have a tuna sandwich.", exAJa: "ご注文はお決まりですか。", exBJa: "はい。ツナサンドをお願いします。", note: "" },
+  { id: "003", word: "Can I take a message?", meaning: "ご伝言を承りましょうか。、何か伝えておきましょうか。", exA: "Hello. I'd like to speak to Sally, please.", exB: "I'm sorry, she's out now. Can I take a message?", exAJa: "もしもし。サリーをお願いします。", exBJa: "すみません、彼女は今外出しています。ご伝言を承りましょうか。", note: "電話での表現" },
+  { id: "004", word: "Can you tell me where ...?", meaning: "どこに…か教えてもらえますか。", exA: "Excuse me. I'm looking for children's shoes. Can you tell me where they are?", exB: "They're on the third floor.", exAJa: "すみません。子ども用の靴を探しています。どこにあるか教えてもらえますか。", exBJa: "3階にあります。", note: "" },
+  { id: "005", word: "Certainly.", meaning: "かしこまりました。", exA: "Can I have another cup of coffee, please?", exB: "Certainly, sir.", exAJa: "コーヒーをもう1杯もらえますか。", exBJa: "かしこまりました、お客さま。", note: "" },
+  { id: "006", word: "Congratulations!", meaning: "おめでとう！", exA: "I won first prize in the singing contest!", exB: "Congratulations!", exAJa: "歌のコンテストで1等賞を取りました！", exBJa: "おめでとう！", note: "" },
+  { id: "007", word: "Do you often come here?", meaning: "ここへはよく来るのですか。", exA: "This is a nice park. Do you often come here?", exB: "Yes. I come here three times a week.", exAJa: "ここはいい公園ですね。ここへはよく来るのですか。", exBJa: "はい。私は週3回ここに来ます。", note: "" },
+  { id: "008", word: "Don't worry.", meaning: "心配しないで。", exA: "The final exam is tomorrow. I'm a little nervous.", exB: "Don't worry. You'll be all right.", exAJa: "最終試験は明日よ。少し緊張しているわ。", exBJa: "心配しないで。君なら大丈夫だよ。", note: "" },
+  { id: "009", word: "Good luck.", meaning: "がんばって。", exA: "I'm going to play in a baseball game next week.", exB: "Are you? Good luck!", exAJa: "ぼくは来週、野球の試合に出るんだ。", exBJa: "そうなの？がんばって！", note: "" },
+  { id: "010", word: "Guess what?", meaning: "（会話を切り出すときに）ねえねえ、聞いて。、ちょっと聞いてくれる？", exA: "Guess what? I'm going to France this summer!", exB: "That's great. Have fun.", exAJa: "ねえねえ、聞いて。今年の夏にフランスに行くの！", exBJa: "それはいいね。楽しんできてね。", note: "" },
+  { id: "011", word: "Have a nice trip.", meaning: "よい旅を。", exA: "I'm leaving now, Mom.", exB: "OK. Have a nice trip.", exAJa: "今から行ってきます、お母さん。", exBJa: "わかったわ。よい旅をね。", note: "" },
+  { id: "012", word: "Have you ever been to 〜?", meaning: "〜に行ったことがありますか。", exA: "Have you ever been to Australia?", exB: "Yes. I went there last year.", exAJa: "オーストラリアに行ったことがありますか。", exBJa: "はい。ぼくは昨年そこに行きました。", note: "" },
+  { id: "013", word: "Help yourself.", meaning: "（食べ物などを）ご自由にどうぞ。", exA: "Can I have some more bread?", exB: "Yes, of course. Help yourself.", exAJa: "もう少しパンをもらえますか。", exBJa: "もちろんいいですよ。ご自由にどうぞ。", note: "" },
+  { id: "014", word: "Here it is.", meaning: "（物を差し出して）はい、どうぞ。", exA: "May I see your passport, please?", exB: "Sure. Here it is.", exAJa: "あなたのパスポートを見せていただけますか。", exBJa: "いいですよ。はい、どうぞ。", note: "Here you are[go]. とあわせて覚えよう" },
+  { id: "015", word: "Here you are [go].", meaning: "（物を差し出して）はい、どうぞ。", exA: "Will you pass me the salt?", exB: "Sure. Here you are.", exAJa: "ぼくに塩を取ってくれますか。", exBJa: "いいですよ。はい、どうぞ。", note: "" },
+  { id: "016", word: "Here's 〜.", meaning: "（物を差し出して）〜をどうぞ。、こちらが〜になります。、ここに〜があります。", exA: "Here's your tea. Would you like some sugar or milk?", exB: "Just a little sugar, please.", exAJa: "紅茶をどうぞ。砂糖やミルクは入れますか。", exBJa: "砂糖を少しだけお願いします。", note: "" },
+  { id: "017", word: "Hold on (, please).", meaning: "（電話で）切らずにお待ちください。", exA: "Can I speak to Mr. Taylor, please?", exB: "Sure. Hold on, please.", exAJa: "テイラーさんをお願いしたいのですが。", exBJa: "はい。切らずにお待ちください。", note: "" },
+  { id: "018", word: "How [What] about 〜?", meaning: "〜はどうですか。", exA: "Can we go shopping together this weekend?", exB: "Sure. How about Sunday afternoon?", exAJa: "今週末、一緒に買い物に行きませんか。", exBJa: "いいですよ。日曜日の午後はどうですか。", note: "" },
+  { id: "019", word: "How [What] about doing 〜?", meaning: "〜するのはどうですか。", exA: "How about going out for lunch?", exB: "Good idea. I'd like to try that new Italian restaurant.", exAJa: "昼食を外へ食べに行くのはどうですか。", exBJa: "いいですね。私はあの新しいイタリア料理店に行ってみたいです。", note: "" },
+  { id: "020", word: "How about you?", meaning: "あなたはどうですか。", exA: "I'll have some orange juice. How about you?", exB: "I'll have coffee.", exAJa: "私はオレンジジュースにします。あなたはどうですか。", exBJa: "ぼくはコーヒーにします。", note: "" },
+  { id: "021", word: "How do [did] you like 〜?", meaning: "〜はどうですか[どうでしたか]。、〜は気に入っていますか[気に入りましたか]。", exA: "How do you like Japan?", exB: "It's great.", exAJa: "日本はどうですか。", exBJa: "すばらしいです。", note: "" },
+  { id: "022", word: "How is [was] 〜?", meaning: "〜（の様子）はどうですか[どうでしたか]。", exA: "How's your family?", exB: "They're fine, thank you.", exAJa: "ご家族はお元気ですか。", exBJa: "元気です、ありがとうございます。", note: "" },
+  { id: "023", word: "How long does it take to do 〜?", meaning: "〜するのにどれくらいの時間がかかりますか。", exA: "How long does it take to get to the museum?", exB: "About fifteen minutes.", exAJa: "博物館へ行くにはどれくらいの時間がかかりますか。", exBJa: "15分ほどです。", note: "" },
+  { id: "024", word: "I agree.", meaning: "そう思います。、同感[賛成]です。", exA: "This shirt will be a nice birthday present for Dad.", exB: "I agree. Let's get it for him.", exAJa: "このシャツはお父さんのいい誕生日プレゼントになるわ。", exBJa: "ぼくもそう思うよ。それをお父さんに買おう。", note: "" },
+  { id: "025", word: "I can't decide.", meaning: "決められません。", exA: "You can have one of these books.", exB: "Well, I can't decide. They all look interesting.", exAJa: "これらの本の中から1冊あげます。", exBJa: "ええと、決められません。全部おもしろそうです。", note: "" },
+  { id: "026", word: "I can't wait to do 〜.", meaning: "〜するのが待ちきれません。", exA: "You're going to the stadium this weekend, aren't you?", exB: "Yes. I can't wait to see the game.", exAJa: "あなたは今週末にスタジアムに行くんだよね？", exBJa: "うん。試合を見るのが待ちきれないよ。", note: "" },
+  { id: "027", word: "I don't think so.", meaning: "私はそうは思いません。", exA: "Do you think it will rain today?", exB: "No, I don't think so.", exAJa: "君は今日は雨が降ると思いますか。", exBJa: "いいえ、私はそうは思いません。", note: "" },
+  { id: "028", word: "I heard ...", meaning: "…だそうですね。、…と聞きました。", exA: "I heard you're going to join the art club.", exB: "Yes. I'm interested in painting.", exAJa: "君は美術部に入るんだそうね。", exBJa: "そうなの。絵を描くことに興味があるの。", note: "" },
+  { id: "029", word: "I hope ...", meaning: "…だといいな。、…であることを望んでいます。", exA: "I want to be a pilot in the future.", exB: "I hope your dreams will come true.", exAJa: "ぼくは将来パイロットになりたいんだ。", exBJa: "あなたの夢が実現するといいわね。", note: "" },
+  { id: "030", word: "I hope so.", meaning: "そうだといいな。、そう望みます。", exA: "I'm sure you'll pass the exam.", exB: "I hope so.", exAJa: "あなたはきっと試験に合格すると思うわ。", exBJa: "そうだといいな。", note: "" },
+  { id: "031", word: "I see.", meaning: "わかりました。、なるほど。", exA: "Turn left at that corner. You'll find the post office on your right.", exB: "I see. Thank you.", exAJa: "あの角を左に曲がってください。郵便局は右側にあります。", exBJa: "わかりました。ありがとうございます。", note: "" },
+  { id: "032", word: "I think so, too.", meaning: "私もそう思います。", exA: "I think we should clean up the room first.", exB: "I think so, too.", exAJa: "まずは部屋を掃除したほうがいいと思うな。", exBJa: "私もそう思うわ。", note: "" },
+  { id: "033", word: "I'd be glad [happy] to.", meaning: "喜んで。", exA: "Can you help me with my work tomorrow?", exB: "Sure, I'd be glad to.", exAJa: "明日、私の仕事を手伝ってもらえますか。", exBJa: "もちろんです、喜んで。", note: "" },
+  { id: "034", word: "I'd like to do 〜.", meaning: "〜したいのですが。", exA: "I'd like to send this package to the United States.", exB: "Certainly.", exAJa: "この小包みをアメリカに送りたいのですが。", exBJa: "かしこまりました。", note: "" },
+  { id: "035", word: "I'd love to.", meaning: "ぜひそうしたいです。", exA: "We're going to have a party tonight. Why don't you come?", exB: "I'd love to.", exAJa: "ぼくたちは今夜パーティーを開きます。あなたも来ませんか。", exBJa: "ぜひ行きたいです。", note: "" },
+  { id: "036", word: "I'll be right back.", meaning: "すぐに戻ります。", exA: "Excuse me. Could I see the menu?", exB: "Of course, ma'am. I'll be right back.", exAJa: "すみません。メニューを見せてもらえますか。", exBJa: "もちろんです、お客さま。すぐに戻ります。", note: "" },
+  { id: "037", word: "I'll be there (soon).", meaning: "（すぐに）そちらへ行きます。", exA: "John, I need your help. Can you come to the kitchen?", exB: "OK, Mom. I'll be there soon.", exAJa: "ジョン、手伝ってほしいの。台所に来られる？", exBJa: "わかったよ、お母さん。すぐにそっちへ行くよ。", note: "" },
+  { id: "038", word: "I'll think about it.", meaning: "（それについて）考えておきます。", exA: "Dad, can I have a watch for my birthday?", exB: "Well, I'll think about it.", exAJa: "お父さん、私の誕生日に腕時計をもらえない？", exBJa: "まあ、考えておくよ。", note: "" },
+  { id: "039", word: "I'm afraid ...", meaning: "あいにく[残念ながら]…です。", exA: "Mike, can we go to the beach on Saturday?", exB: "I'm afraid I'm busy this weekend.", exAJa: "マイク、土曜日に海辺に行かない？", exBJa: "あいにく今週末は忙しいんだ。", note: "I'm afraid に続く that 節の that は会話ではふつう省略する" },
+  { id: "040", word: "I'm afraid not.", meaning: "残念ながら、違います[できません]。", exA: "Is my answer correct?", exB: "No, I'm afraid not. Try again.", exAJa: "ぼくの答えは正しいですか。", exBJa: "いいえ、残念ながら、違います。もう1度やってみなさい。", note: "" },
+  { id: "041", word: "I'm coming.", meaning: "今行きます。", exA: "Steve, dinner is ready.", exB: "OK. I'm coming.", exAJa: "スティーブ、夕食ができたわよ。", exBJa: "わかった。今行くよ。", note: "相手のところに「今行きます」と言うには come を使う" },
+  { id: "042", word: "I'm full.", meaning: "おなかがいっぱいです。", exA: "Would you like some more dessert?", exB: "No, thank you. I'm full.", exAJa: "デザートをもっといかがですか。", exBJa: "いえ、結構です。おなかがいっぱいです。", note: "" },
+  { id: "043", word: "I'm glad you like it.", meaning: "気に入ってくれてうれしいです。", exA: "Thank you very much for such a lovely present.", exB: "I'm glad you like it.", exAJa: "こんなすてきなプレゼントをどうもありがとう。", exBJa: "気に入ってくれてうれしいよ。", note: "" },
+  { id: "044", word: "I'm just looking.", meaning: "（店で）見ているだけです。", exA: "May I help you?", exB: "I'm just looking, thank you.", exAJa: "いらっしゃいませ、何かお手伝いしましょうか。", exBJa: "見ているだけです、ありがとう。", note: "" },
+  { id: "045", word: "I'm not from here.", meaning: "（知らない場所で道を聞かれて）私はここの者ではありません。、不案内なもので。", exA: "Excuse me. Is there a bank around here?", exB: "Sorry, but I'm not from here.", exAJa: "すみません。この辺りに銀行はありますか。", exBJa: "ごめんなさい、私はここの者ではありません。", note: "" },
+  { id: "046", word: "I'm not sure.", meaning: "わかりません。", exA: "Are you going on a picnic tomorrow?", exB: "I'm not sure. I need to check the weather report.", exAJa: "明日、あなたはピクニックに行きますか。", exBJa: "わかりません。天気予報を確認する必要があります。", note: "" },
+  { id: "047", word: "I'm sure ...", meaning: "きっと…だと思います。", exA: "Do you think Kate will come with us?", exB: "I'm sure she will.", exAJa: "ケイトは私たちと一緒に来ると思いますか。", exBJa: "彼女はきっと来ると思います。", note: "" },
+  { id: "048", word: "Is anything wrong?", meaning: "どうかしましたか。、何か問題がありますか。", exA: "You're not eating the pizza. Is anything wrong?", exB: "Well, I don't like cheese very much.", exAJa: "ピザを食べていないじゃない。どうかしたの？", exBJa: "いやあ、ぼくはチーズがあまり好きじゃないんだ。", note: "" },
+  { id: "049", word: "(It's) my pleasure.", meaning: "どういたしまして。", exA: "Thank you for the delicious dinner.", exB: "It's my pleasure.", exAJa: "とてもおいしいディナーをありがとう。", exBJa: "どういたしまして。", note: "" },
+  { id: "050", word: "It's time for 〜.", meaning: "〜の時間です。", exA: "Kevin, it's time for bed.", exB: "All right, Mom.", exAJa: "ケビン、寝る時間よ。", exBJa: "わかったよ、お母さん。", note: "" },
+  { id: "051", word: "It's time to do 〜.", meaning: "〜する時間です。", exA: "Anna, it's time to get up.", exB: "I want to sleep more.", exAJa: "アンナ、起きる時間だよ。", exBJa: "もっと寝ていたいわ。", note: "" },
+  { id: "052", word: "Just a moment [minute].", meaning: "ちょっとお待ちください。", exA: "Hello. I'm here to see Mr. White. My name is Allen.", exB: "Just a moment, please.", exAJa: "こんにちは。ホワイト先生に会いに来ました。ぼくの名前はアレンです。", exBJa: "ちょっとお待ちください。", note: "" },
+  { id: "053", word: "Let me see.", meaning: "（考えながら）ええと。", exA: "How many people are coming to the party?", exB: "Let me see. Jeff can't come, so six people.", exAJa: "そのパーティーには何人来るのですか。", exBJa: "ええと。ジェフが来られないから、6人です。", note: "" },
+  { id: "054", word: "May [Can] I help you?", meaning: "（店員が客に）何かお手伝いしましょうか。、いらっしゃいませ。", exA: "Good morning. May I help you?", exB: "Yes, I'm looking for a nice present for my mother.", exAJa: "おはようございます。何かお手伝いしましょうか。", exBJa: "はい、母にすてきなプレゼントを探しています。", note: "" },
+  { id: "055", word: "May [Can / Could] I speak to A?", meaning: "（電話で）A をお願いしたいのですが。", exA: "Hello, this is Jim Adams. May I speak to Mrs. Baker?", exB: "Sorry, she's in a meeting right now.", exAJa: "もしもし、ジム・アダムスと申します。ベーカーさんをお願いしたいのですが。", exBJa: "すみません、彼女は今会議中です。", note: "" },
+  { id: "056", word: "Me, neither.", meaning: "（否定文を受けて）私も（〜ではありません）。", exA: "I don't like horror movies.", exB: "Me, neither.", exAJa: "私はホラー映画が好きではないわ。", exBJa: "ぼくもだよ。", note: "Me, too. と Me, neither. をしっかり使い分けよう" },
+  { id: "057", word: "Me, too.", meaning: "私も。", exA: "I want to go skiing this winter.", exB: "Me, too.", exAJa: "ぼくは今年の冬はスキーに行きたいな。", exBJa: "私もよ。", note: "" },
+  { id: "058", word: "Nice talking to you.", meaning: "お話ができてよかったです。", exA: "I must be going now. Bye.", exB: "Bye. Nice talking to you.", exAJa: "私はもう行かなければなりません。さようなら。", exBJa: "さようなら。お話ができてよかったです。", note: "" },
+  { id: "059", word: "Nice to see you (again).", meaning: "（また）会えてうれしいです。", exA: "Nice to see you again, Lisa.", exB: "Nice to see you too, Brian.", exAJa: "また会えてうれしいよ、リサ。", exBJa: "私も会えてうれしいわ、ブライアン。", note: "" },
+  { id: "060", word: "No problem.", meaning: "いいですよ。、問題ありません。、どういたしまして。", exA: "Could you drive me to the station, Dad?", exB: "No problem.", exAJa: "車で駅まで送ってもらえない、お父さん？", exBJa: "いいよ。", note: "" },
+  { id: "061", word: "No, thanks [thank you].", meaning: "いいえ、結構です。", exA: "Would you like something to drink?", exB: "No, thanks.", exAJa: "飲み物はいかがですか。", exBJa: "いいえ、結構です。", note: "" },
+  { id: "062", word: "Not at all.", meaning: "まったくそんなことはありません。、どういたしまして。", exA: "Is math difficult for you?", exB: "Not at all. I like it very much.", exAJa: "数学はあなたにとって難しいですか。", exBJa: "まったくそんなことはありません。ぼくは数学がとても好きです。", note: "" },
+  { id: "063", word: "Not really.", meaning: "それほどでもないです。、そうでもないです。", exA: "Is the new French restaurant very expensive?", exB: "Not really.", exAJa: "その新しいフランス料理店はとても高いのですか。", exBJa: "それほどでもないです。", note: "" },
+  { id: "064", word: "Not yet.", meaning: "まだです。", exA: "Have you finished lunch?", exB: "No, not yet.", exAJa: "昼食は済ませましたか。", exBJa: "いいえ、まだです。", note: "" },
+  { id: "065", word: "Of course.", meaning: "もちろん、いいですよ。", exA: "Excuse me. Can we order now?", exB: "Of course.", exAJa: "すみません。今注文してもいいですか。", exBJa: "もちろんです。", note: "" },
+  { id: "066", word: "Same to you.", meaning: "あなたもね。", exA: "Have a nice weekend.", exB: "Same to you.", exAJa: "よい週末を。", exBJa: "あなたもね。", note: "" },
+  { id: "067", word: "See you later.", meaning: "また後でね。", exA: "Fred, I'll pick you up at 5:30. See you later.", exB: "OK, Mom. Bye.", exAJa: "フレッド、5時半にあなたを迎えに来るわ。また後でね。", exBJa: "わかった、お母さん。じゃあね。", note: "" },
+  { id: "068", word: "Sounds good [nice / great].", meaning: "いいですね。", exA: "How about going to the movies tonight?", exB: "Sounds good.", exAJa: "今夜、映画を見に行きませんか。", exBJa: "いいですね。", note: "" },
+  { id: "069", word: "Speaking.", meaning: "（電話で）私です。", exA: "Hello. May I speak to Liz, please?", exB: "Speaking.", exAJa: "もしもし。リズをお願いしたいのですが。", exBJa: "私です。", note: "Speaking. のような電話での表現をまとめてチェックしておこう" },
+  { id: "070", word: "Take care.", meaning: "（別れのあいさつとして）じゃあね。、気をつけてね。", exA: "Oh, it's time to go home. See you tomorrow.", exB: "Take care.", exAJa: "あら、帰る時間だね。また明日ね。", exBJa: "じゃあね。", note: "" },
+  { id: "071", word: "Thanks anyway.", meaning: "とにかくありがとう。", exA: "Shall I help you with your homework?", exB: "I think I can do it myself. Thanks anyway.", exAJa: "君の宿題を手伝おうか。", exBJa: "1人でできると思うよ。とにかくありがとう。", note: "" },
+  { id: "072", word: "Thanks [Thank you] for doing 〜.", meaning: "〜してくれてありがとう。", exA: "Thanks for inviting me to the party.", exB: "Not at all. I'm glad you came.", exAJa: "パーティーに招待してくれてありがとう。", exBJa: "どういたしまして。来てくれてうれしいです。", note: "" },
+  { id: "073", word: "(That) sounds like fun.", meaning: "（それは）楽しそうですね。", exA: "I'm going to see a baseball game with my cousin tomorrow.", exB: "That sounds like fun.", exAJa: "明日いとこと野球の試合を見に行きます。", exBJa: "それは楽しそうですね。", note: "" },
+  { id: "074", word: "That would be great [nice].", meaning: "それはいいですね。", exA: "I'm baking a cake now. Would you like to come over?", exB: "That would be great.", exAJa: "今、ケーキを焼いているの。うちに来ない？", exBJa: "それはいいね。", note: "" },
+  { id: "075", word: "That's a good idea.", meaning: "それはいい考えです。", exA: "Shall we get something nice for Lisa's birthday?", exB: "That's a good idea.", exAJa: "リサの誕生日に何かすてきなものを買おうか。", exBJa: "それはいい考えね。", note: "" },
+  { id: "076", word: "That's all.", meaning: "それだけです。、それで全部です。", exA: "Here's your sandwich. Would you like anything else?", exB: "That's all, thanks.", exAJa: "こちらがサンドイッチになります。他にはよろしいでしょうか。", exBJa: "それだけです、ありがとう。", note: "" },
+  { id: "077", word: "That's fine (with me).", meaning: "（私は）それで大丈夫[いい]です。", exA: "Can we have a meeting on Friday afternoon?", exB: "That's fine with me.", exAJa: "金曜日の午後に会議はできますか。", exBJa: "私はそれで大丈夫です。", note: "" },
+  { id: "078", word: "That's right.", meaning: "そのとおりです。", exA: "You're on the basketball team, aren't you?", exB: "That's right.", exAJa: "あなたはバスケットボールチームに入っているんだよね？", exBJa: "そのとおりだよ。", note: "" },
+  { id: "079", word: "That's too bad.", meaning: "それはお気の毒[残念]です。", exA: "I couldn't go camping because I had a cold.", exB: "That's too bad.", exAJa: "ぼくは風邪をひいていたので、キャンプに行けなかったんだ。", exBJa: "それはお気の毒に。", note: "" },
+  { id: "080", word: "That's very kind of you.", meaning: "ご親切にありがとうございます。", exA: "Please have my seat.", exB: "That's very kind of you.", exAJa: "私の席にお座りください。", exBJa: "ご親切にありがとうございます。", note: "That's very kind of you. は of を使うことに注意" },
+  { id: "081", word: "There's something wrong with 〜.", meaning: "〜の調子が悪いです。", exA: "Dad, there's something wrong with this computer.", exB: "I'll take a look at it.", exAJa: "お父さん、このコンピューターの調子が悪いの。", exBJa: "見てみるよ。", note: "" },
+  { id: "082", word: "This is 〜.", meaning: "（電話で）こちらは〜です。", exA: "Hello. This is Nick. Is Linda there?", exB: "Hold on, please.", exAJa: "もしもし。こちらはニックです。リンダはいますか。", exBJa: "切らずにお待ちください。", note: "" },
+  { id: "083", word: "Welcome (to 〜).", meaning: "（〜へ）ようこそ。", exA: "Welcome to our home, Mary!", exB: "Wow! Your house is beautiful!", exAJa: "わが家へようこそ、メアリー！", exBJa: "うわー！あなたのおうちはきれいですね！", note: "" },
+  { id: "084", word: "What do you do (now)?", meaning: "（今）お仕事は何をしていますか。", exA: "We haven't seen each other for a long time. What do you do now?", exB: "I'm an elementary school teacher.", exAJa: "お互い長いこと会っていなかったわね。今、仕事は何をしているの？", exBJa: "ぼくは小学校の教師をしているよ。", note: "" },
+  { id: "085", word: "What do you think of 〜?", meaning: "〜をどう思いますか。", exA: "What do you think of this town?", exB: "I like it, but it's too cold in winter.", exAJa: "この町をどう思いますか。", exBJa: "好きですけど、冬が寒すぎます。", note: "" },
+  { id: "086", word: "What happened?", meaning: "何があったのですか。", exA: "Paula, what happened?", exB: "I fell off my bike.", exAJa: "ポーラ、何があったの？", exBJa: "自転車で転んだの。", note: "" },
+  { id: "087", word: "What would you like (for 〜)?", meaning: "（〜には）何がいいですか。", exA: "What would you like for dinner?", exB: "I want to have beef stew.", exAJa: "夕食は何がいい？", exBJa: "ぼくはビーフシチューが食べたいな。", note: "" },
+  { id: "088", word: "What's the matter?", meaning: "どうしたのですか。", exA: "What's the matter?", exB: "I've had a headache since this morning.", exAJa: "どうしたのですか。", exBJa: "今朝から頭痛がするのです。", note: "What's the matter? の matter は「困ったこと」の意味" },
+  { id: "089", word: "What's the problem?", meaning: "どうしたのですか。", exA: "What's the problem?", exB: "I can't find my key.", exAJa: "どうしたのですか。", exBJa: "私のかぎが見つからないんです。", note: "" },
+  { id: "090", word: "What's wrong with 〜?", meaning: "〜はどうしたのですか。、〜のどこが悪いのですか。", exA: "What's wrong with your smartphone?", exB: "I can't send e-mails.", exAJa: "あなたのスマートフォンはどうしたのですか。", exBJa: "Eメールが送れないんです。", note: "" },
+  { id: "091", word: "Why do you think so?", meaning: "どうしてそう思うのですか。", exA: "I think Dan is the best basketball player in our school.", exB: "Why do you think so?", exAJa: "私はダンが学校でいちばんバスケットボールがじょうずだと思います。", exBJa: "どうしてそう思うのですか。", note: "" },
+  { id: "092", word: "Why don't we do 〜?", meaning: "（一緒に）〜しませんか。", exA: "Why don't we go for a walk after lunch?", exB: "Sounds nice.", exAJa: "昼食後に散歩に行きませんか。", exBJa: "いいですね。", note: "" },
+  { id: "093", word: "Why don't you do 〜?", meaning: "〜してはどうですか。", exA: "I'm going to Sydney, but I don't know where to stay.", exB: "Why don't you ask Ben? He lived there for two years.", exAJa: "シドニーに行くんだけど、どこに泊まればいいかわからないんだ。", exBJa: "ベンに聞いたら？彼は2年間そこに住んでいたわよ。", note: "" },
+  { id: "094", word: "Why not?", meaning: "（否定文を受けて）どうして？、（誘いなどを受けて）もちろん。、そうしよう。", exA: "I want to go with you, but I can't.", exB: "Why not?", exAJa: "あなたと一緒に行きたいんだけど、できないの。", exBJa: "どうして？", note: "" },
+  { id: "095", word: "Would you like to do 〜?", meaning: "〜しませんか。、〜したいですか。", exA: "Would you like to go hiking on Sunday?", exB: "I'd love to.", exAJa: "日曜日にハイキングに行きませんか。", exBJa: "ぜひ行きたいです。", note: "" },
+  { id: "096", word: "You can do it.", meaning: "あなたならできますよ。", exA: "My homework is too difficult. I can't finish it today.", exB: "Don't worry. You can do it.", exAJa: "宿題が難しすぎるんだ。今日終わらせることができないよ。", exBJa: "心配しないで。あなたならできるわ。", note: "" },
+  { id: "097", word: "You did a great [good] job.", meaning: "とてもよくできました[よくできました]。", exA: "What did you think of my speech, Ms. Green?", exB: "I enjoyed it very much. You did a great job.", exAJa: "ぼくのスピーチはどうでしたか、グリーン先生？", exBJa: "すごく楽しかったわ。とてもよくできたわね。", note: "" },
+  { id: "098", word: "(You) go ahead.", meaning: "先に行ってて。、お先にどうぞ。", exA: "Tina, let's go to the cafeteria.", exB: "I have to go to the library first. You go ahead, and I'll join you later.", exAJa: "ティナ、カフェテリアに行こうよ。", exBJa: "私は先に図書室に行かなくちゃならないの。先に行ってて、後で合流するわ。", note: "" },
+  { id: "099", word: "You have the wrong number.", meaning: "（電話で）番号をお間違えです。", exA: "Hello, is this Tony's Steak Restaurant?", exB: "I'm sorry. You have the wrong number.", exAJa: "もしもし、そちらはトニーズ・ステーキ・レストランですか。", exBJa: "すみません。番号をお間違えです。", note: "" },
+  { id: "100", word: "You're welcome.", meaning: "どういたしまして。", exA: "Thank you for your help.", exB: "You're welcome.", exAJa: "手伝ってくれてありがとう。", exBJa: "どういたしまして。", note: "" },
+];
+
+const SECTIONS = [
+  { key: "all", label: "全部 (100個)", range: [1, 100] },
+  { key: "s1", label: "前半 (001–050)", range: [1, 50] },
+  { key: "s2", label: "後半 (051–100)", range: [51, 100] },
+];
+
+const STORAGE_KEY = "eiken3_phrase_progress_v1";
+function loadProgress() {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function App() {
+  const [screen, setScreen] = useState("home");
+  const [progress, setProgress] = useState(loadProgress);
+  const [sectionKey, setSectionKey] = useState("all");
+  const [quizResult, setQuizResultState] = useState(null);
+  const [quizPool, setQuizPool] = useState([]);
+  const [quizMode, setQuizMode] = useState("e2j");
+  const [quizLen, setQuizLen] = useState(10);
+
+  React.useEffect(() => {
+    try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); } catch (e) {}
+  }, [progress]);
+
+  const filteredWords = useMemo(() => {
+    const sec = SECTIONS.find((s) => s.key === sectionKey);
+    return WORDS.filter((w) => {
+      const num = parseInt(w.id, 10);
+      return num >= sec.range[0] && num <= sec.range[1];
+    });
+  }, [sectionKey]);
+
+  const stats = useMemo(() => {
+    let known = 0, learning = 0;
+    WORDS.forEach((w) => {
+      if (progress[w.id] === "known") known++;
+      else if (progress[w.id] === "learning") learning++;
+    });
+    return { known, learning, total: WORDS.length };
+  }, [progress]);
+
+  const setWordStatus = (id, status) => setProgress((p) => ({ ...p, [id]: status }));
+
+  return (
+    <div style={styles.app}>
+      <style>{globalCss}</style>
+      <Header stats={stats} onHome={() => setScreen("home")} />
+      <main style={styles.main}>
+        {screen === "home" && (
+          <Home stats={stats} onStudy={() => setScreen("study")} onQuiz={() => setScreen("quizSetup")}
+            sectionKey={sectionKey} setSectionKey={setSectionKey} count={filteredWords.length}
+            onReset={() => { if (confirm("学習の進み具合をすべてリセットします。よろしいですか？")) setProgress({}); }} />
+        )}
+        {screen === "study" && (
+          <Study words={filteredWords} progress={progress} setWordStatus={setWordStatus} onBack={() => setScreen("home")} />
+        )}
+        {screen === "quizSetup" && (
+          <QuizSetup count={filteredWords.length} quizMode={quizMode} setQuizMode={setQuizMode} quizLen={quizLen} setQuizLen={setQuizLen}
+            onStart={() => { setQuizPool(buildQuiz(filteredWords, quizLen, quizMode)); setScreen("quiz"); }}
+            onBack={() => setScreen("home")} />
+        )}
+        {screen === "quiz" && (
+          <Quiz pool={quizPool} mode={quizMode} setWordStatus={setWordStatus}
+            onFinish={(r) => { setQuizResultState(r); setScreen("quizResult"); }}
+            onBack={() => setScreen("home")} />
+        )}
+        {screen === "quizResult" && (
+          <QuizResult result={quizResult}
+            onRetry={() => { setQuizPool(buildQuiz(filteredWords, quizLen, quizMode)); setScreen("quiz"); }}
+            onReviewWrong={() => {
+              const wrongIds = new Set(quizResult.wrong.map((w) => w.id));
+              setQuizPool(buildQuiz(WORDS.filter((w) => wrongIds.has(w.id)), quizResult.wrong.length, quizMode));
+              setScreen("quiz");
+            }}
+            onHome={() => setScreen("home")} />
+        )}
+      </main>
+      <Footer />
+    </div>
+  );
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function buildQuiz(words, len, mode) {
+  const picked = shuffle(words).slice(0, Math.min(len, words.length));
+  return picked.map((w) => {
+    const others = WORDS.filter((x) => x.id !== w.id);
+    const distractors = shuffle(others).slice(0, 3);
+    const options = shuffle([w, ...distractors]).map((o) => ({ id: o.id, label: mode === "e2j" ? o.meaning : o.word }));
+    return { prompt: mode === "e2j" ? w.word : w.meaning, answerId: w.id, options, word: w };
+  });
+}
+
+function Header({ stats, onHome }) {
+  const pct = Math.round((stats.known / stats.total) * 100);
+  return (
+    <header style={styles.header}>
+      <div style={styles.headerInner}>
+        <button onClick={onHome} style={styles.logoBtn}>
+          <span style={styles.logoMark}>話</span>
+          <span style={styles.logoText}>英検3級 会話表現マスター<span style={styles.logoSub}>中2向け・全100個</span></span>
+        </button>
+        <div style={styles.headerStat}>
+          <div style={styles.headerStatNum}>{stats.known}<span style={styles.slash}>/{stats.total}</span></div>
+          <div style={styles.headerBar}><div style={{ ...styles.headerBarFill, width: pct + "%" }} /></div>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+function Home({ stats, onStudy, onQuiz, sectionKey, setSectionKey, count, onReset }) {
+  const pct = Math.round((stats.known / stats.total) * 100);
+  return (
+    <div className="fade-in">
+      <section style={styles.hero}>
+        <div style={styles.heroRing}>
+          <svg viewBox="0 0 120 120" style={{ width: 132, height: 132 }}>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.25)" strokeWidth="10" />
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#fff" strokeWidth="10"
+              strokeLinecap="round" strokeDasharray={2 * Math.PI * 52}
+              strokeDashoffset={2 * Math.PI * 52 * (1 - pct / 100)}
+              transform="rotate(-90 60 60)" style={{ transition: "stroke-dashoffset .7s ease" }} />
+          </svg>
+          <div style={styles.heroRingText}>
+            <div style={styles.heroPct}>{pct}<span style={{ fontSize: 18 }}>%</span></div>
+            <div style={styles.heroPctLabel}>おぼえた</div>
+          </div>
+        </div>
+        <div style={styles.heroInfo}>
+          <h1 style={styles.heroTitle}>今日も会話表現を{"\n"}マスターしよう！</h1>
+          <div style={styles.heroChips}>
+            <span style={styles.chipKnown}>✓ おぼえた {stats.known}</span>
+            <span style={styles.chipLearn}>学習中 {stats.learning}</span>
+            <span style={styles.chipRest}>未学習 {stats.total - stats.known - stats.learning}</span>
+          </div>
+        </div>
+      </section>
+
+      <section style={styles.card}>
+        <h2 style={styles.cardTitle}>📚 学習する範囲をえらぶ</h2>
+        <div style={styles.segGroup}>
+          {SECTIONS.map((s) => (
+            <button key={s.key} onClick={() => setSectionKey(s.key)} style={sectionKey === s.key ? styles.segOn : styles.segOff}>{s.label}</button>
+          ))}
+        </div>
+        <div style={styles.countNote}>対象の表現：<b style={{ color: "#e85d2f" }}>{count}個</b></div>
+      </section>
+
+      <section style={styles.actionGrid}>
+        <button onClick={onStudy} style={{ ...styles.bigAction, background: "linear-gradient(135deg,#ff8a5c,#e85d2f)" }} disabled={count === 0}>
+          <span style={styles.bigActionIcon}>🃏</span>
+          <span style={styles.bigActionTitle}>覚える（カード）</span>
+          <span style={styles.bigActionDesc}>意味・会話例をチェック</span>
+        </button>
+        <button onClick={onQuiz} style={{ ...styles.bigAction, background: "linear-gradient(135deg,#3aa9a0,#1f7d76)" }} disabled={count === 0}>
+          <span style={styles.bigActionIcon}>📝</span>
+          <span style={styles.bigActionTitle}>確認テスト</span>
+          <span style={styles.bigActionDesc}>4択クイズで力だめし</span>
+        </button>
+      </section>
+      <button onClick={onReset} style={styles.resetBtn}>進み具合をリセット</button>
+    </div>
+  );
+}
+
+function Study({ words, progress, setWordStatus, onBack }) {
+  const [i, setI] = useState(0);
+  const [flipped, setFlipped] = useState(false);
+  const [order] = useState(() => shuffle(words));
+  const w = order[i];
+  if (!w) return null;
+  const status = progress[w.id];
+
+  const go = (dir) => {
+    setFlipped(false);
+    setTimeout(() => {
+      setI((v) => { const n = v + dir; if (n < 0) return 0; if (n >= order.length) return order.length - 1; return n; });
+    }, 120);
+  };
+  const mark = (st) => { setWordStatus(w.id, st); if (i < order.length - 1) go(1); };
+  const learnedCount = order.filter((x) => progress[x.id] === "known").length;
+
+  return (
+    <div className="fade-in">
+      <TopBar onBack={onBack} title="覚えるカード" />
+      <div style={styles.progRow}>
+        <span style={styles.progText}>{i + 1} / {order.length}</span>
+        <div style={styles.progBar}><div style={{ ...styles.progBarFill, width: ((i + 1) / order.length) * 100 + "%" }} /></div>
+        <span style={styles.progText}>✓{learnedCount}</span>
+      </div>
+      <div style={styles.cardScene} onClick={() => setFlipped((f) => !f)}>
+        <div style={{ ...styles.flipCard, transform: flipped ? "rotateY(180deg)" : "none" }}>
+          <div style={styles.faceFront}>
+            <span style={styles.posTag}>会話表現 {w.id}</span>
+            <div style={styles.cardWord}>{w.word}</div>
+            {status && <span style={status === "known" ? styles.badgeKnown : styles.badgeLearn}>{status === "known" ? "✓ おぼえた" : "学習中"}</span>}
+            <div style={styles.tapHint}>タップで意味と会話例を見る 👆</div>
+          </div>
+          <div style={styles.faceBack}>
+            <div style={styles.backMeaning}>{w.meaning}</div>
+            <div style={styles.backEx}>
+              <div style={styles.dialogRow}><span style={styles.spkA}>A</span><div><div style={styles.dialogEn}>{w.exA}</div><div style={styles.dialogJa}>{w.exAJa}</div></div></div>
+              <div style={styles.dialogRow}><span style={styles.spkB}>B</span><div><div style={styles.dialogEn}>{w.exB}</div><div style={styles.dialogJa}>{w.exBJa}</div></div></div>
+            </div>
+            {w.note && <div style={styles.backNote}>💡 {w.note}</div>}
+            <div style={styles.tapHint}>タップで英語にもどる 👆</div>
+          </div>
+        </div>
+      </div>
+      <div style={styles.studyBtnRow}>
+        <button onClick={() => mark("learning")} style={styles.btnLearn}>🔁 もう一回</button>
+        <button onClick={() => mark("known")} style={styles.btnKnown}>✓ おぼえた！</button>
+      </div>
+      <div style={styles.navRow}>
+        <button onClick={() => go(-1)} style={styles.navBtn} disabled={i === 0}>← 前</button>
+        <button onClick={() => go(1)} style={styles.navBtn} disabled={i === order.length - 1}>次 →</button>
+      </div>
+    </div>
+  );
+}
+
+function QuizSetup({ count, quizMode, setQuizMode, quizLen, setQuizLen, onStart, onBack }) {
+  const lengths = [...new Set([10, 20, 30, Math.min(count, 50)].filter((l) => l <= count && l > 0))];
+  return (
+    <div className="fade-in">
+      <TopBar onBack={onBack} title="確認テストの設定" />
+      <section style={styles.card}>
+        <h2 style={styles.cardTitle}>出題の形式</h2>
+        <div style={styles.segGroup}>
+          <button onClick={() => setQuizMode("e2j")} style={quizMode === "e2j" ? styles.segOn : styles.segOff}>英語 → 意味</button>
+          <button onClick={() => setQuizMode("j2e")} style={quizMode === "j2e" ? styles.segOn : styles.segOff}>意味 → 英語</button>
+        </div>
+        <h2 style={{ ...styles.cardTitle, marginTop: 22 }}>問題数（対象 {count}個）</h2>
+        <div style={styles.segWrap}>
+          {lengths.map((l) => (
+            <button key={l} onClick={() => setQuizLen(l)} style={quizLen === l ? styles.pillOn : styles.pillOff}>{l}問</button>
+          ))}
+        </div>
+      </section>
+      <button onClick={onStart} style={styles.startBtn} disabled={count === 0}>テストをはじめる →</button>
+    </div>
+  );
+}
+
+function Quiz({ pool, mode, setWordStatus, onFinish, onBack }) {
+  const [i, setI] = useState(0);
+  const [picked, setPicked] = useState(null);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [wrong, setWrong] = useState([]);
+  const q = pool[i];
+  if (!q) return null;
+
+  const choose = (optId) => {
+    if (picked) return;
+    setPicked(optId);
+    if (optId === q.answerId) { setCorrectCount((c) => c + 1); setWordStatus(q.word.id, "known"); }
+    else { setWrong((arr) => [...arr, q.word]); setWordStatus(q.word.id, "learning"); }
+  };
+  const advance = () => {
+    if (i < pool.length - 1) { setI(i + 1); setPicked(null); }
+    else { onFinish({ total: pool.length, correct: correctCount, wrong }); }
+  };
+
+  return (
+    <div className="fade-in">
+      <TopBar onBack={onBack} title={`テスト ${i + 1}/${pool.length}`} />
+      <div style={styles.progRow}>
+        <div style={styles.progBar}><div style={{ ...styles.progBarFill, width: (i / pool.length) * 100 + "%", background: "#1f7d76" }} /></div>
+        <span style={{ ...styles.progText, color: "#1f7d76" }}>✓{correctCount}</span>
+      </div>
+      <div style={styles.quizPrompt}>
+        <div style={styles.quizPromptSub}>会話表現</div>
+        <div style={styles.quizPromptMain}>{q.prompt}</div>
+        <div style={styles.quizQ}>{mode === "e2j" ? "意味は？" : "英語は？"}</div>
+      </div>
+      <div style={styles.optGrid}>
+        {q.options.map((o) => {
+          let st = styles.optBtn;
+          if (picked) {
+            if (o.id === q.answerId) st = styles.optCorrect;
+            else if (o.id === picked) st = styles.optWrong;
+            else st = styles.optDim;
+          }
+          return (
+            <button key={o.id} onClick={() => choose(o.id)} style={st} disabled={!!picked}>
+              {o.label}
+              {picked && o.id === q.answerId && <span style={styles.optIcon}>✓</span>}
+              {picked && o.id === picked && o.id !== q.answerId && <span style={styles.optIcon}>✕</span>}
+            </button>
+          );
+        })}
+      </div>
+      {picked && (
+        <div className="fade-in" style={styles.quizFeedback}>
+          <div style={picked === q.answerId ? styles.fbCorrect : styles.fbWrong}>{picked === q.answerId ? "せいかい！🎉" : "おしい！もう一度かくにん 👇"}</div>
+          <div style={styles.fbCard}>
+            <b style={{ fontSize: 17 }}>{q.word.word}</b>
+            <div style={{ marginTop: 4 }}>{q.word.meaning}</div>
+            <div style={{ marginTop: 8, color: "#555", fontSize: 14 }}>
+              <div><b style={{ color: "#e85d2f" }}>A:</b> {q.word.exA}</div>
+              <div><b style={{ color: "#1f7d76" }}>B:</b> {q.word.exB}</div>
+            </div>
+          </div>
+          <button onClick={advance} style={styles.nextBig}>{i < pool.length - 1 ? "次の問題へ →" : "結果を見る 🏁"}</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function QuizResult({ result, onRetry, onReviewWrong, onHome }) {
+  if (!result) return null;
+  const { total, correct, wrong } = result;
+  const pct = Math.round((correct / total) * 100);
+  let msg = "もう少し！くり返せば必ず覚えられるよ 💪", emoji = "🌱";
+  if (pct === 100) { msg = "パーフェクト！すごい！🏆"; emoji = "🏆"; }
+  else if (pct >= 80) { msg = "よくできました！この調子！⭐"; emoji = "🌟"; }
+  else if (pct >= 60) { msg = "いい感じ！あと一歩！👍"; emoji = "😊"; }
+
+  return (
+    <div className="fade-in">
+      <section style={{ ...styles.card, textAlign: "center", paddingTop: 36 }}>
+        <div style={{ fontSize: 56 }}>{emoji}</div>
+        <div style={styles.resultScore}>{correct} <span style={{ fontSize: 26, color: "#bbb" }}>/ {total}</span></div>
+        <div style={styles.resultPct}>正答率 {pct}%</div>
+        <div style={styles.resultMsg}>{msg}</div>
+      </section>
+      {wrong.length > 0 && (
+        <section style={styles.card}>
+          <h2 style={styles.cardTitle}>🔁 まちがえた表現（{wrong.length}）</h2>
+          {wrong.map((w) => (
+            <div key={w.id} style={styles.wrongRow}>
+              <div>
+                <b style={{ fontSize: 15 }}>{w.word}</b>
+                <div style={{ fontSize: 14, color: "#555" }}>{w.meaning}</div>
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+      <div style={styles.actionGrid}>
+        {wrong.length > 0 && (
+          <button onClick={onReviewWrong} style={{ ...styles.startBtn, background: "linear-gradient(135deg,#ff8a5c,#e85d2f)", margin: 0 }}>まちがえた{wrong.length}問だけ再挑戦</button>
+        )}
+        <button onClick={onRetry} style={{ ...styles.startBtn, margin: 0 }}>もう一度テスト</button>
+      </div>
+      <button onClick={onHome} style={styles.resetBtn}>ホームにもどる</button>
+    </div>
+  );
+}
+
+function TopBar({ onBack, title }) {
+  return (
+    <div style={styles.topBar}>
+      <button onClick={onBack} style={styles.backBtn}>←</button>
+      <span style={styles.topTitle}>{title}</span>
+      <span style={{ width: 40 }} />
+    </div>
+  );
+}
+
+function Footer() {
+  return <footer style={styles.footer}>『英検3級 単語帳 会話表現編』より・学習用アプリ</footer>;
+}
+
+const globalCss = `
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px);} to {opacity:1; transform:none;} }
+  .fade-in { animation: fadeIn .35s ease both; }
+  button { font-family: inherit; cursor: pointer; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+`;
+
+const C = { bg: "#fff7f2", orange: "#e85d2f", orangeLight: "#ff8a5c", ink: "#33271f", teal: "#1f7d76", cream: "#ffffff", line: "#f0d9cc" };
+
+const styles = {
+  app: { minHeight: "100vh", background: `radial-gradient(circle at 0% 0%, #ffe9dd 0%, ${C.bg} 45%)`, fontFamily: "'Hiragino Maru Gothic ProN','Hiragino Sans','Yu Gothic',sans-serif", color: C.ink, paddingBottom: 40 },
+  main: { maxWidth: 560, margin: "0 auto", padding: "16px 16px 0" },
+  header: { position: "sticky", top: 0, zIndex: 20, background: "rgba(255,247,242,.9)", backdropFilter: "blur(8px)", borderBottom: `2px solid ${C.line}` },
+  headerInner: { maxWidth: 560, margin: "0 auto", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  logoBtn: { display: "flex", alignItems: "center", gap: 10, background: "none", border: "none", padding: 0 },
+  logoMark: { width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg,${C.orangeLight},${C.orange})`, color: "#fff", display: "grid", placeItems: "center", fontWeight: 800, fontSize: 20, boxShadow: "0 3px 8px rgba(232,93,47,.35)", flexShrink: 0 },
+  logoText: { display: "flex", flexDirection: "column", alignItems: "flex-start", lineHeight: 1.2, fontWeight: 800, fontSize: 15, color: C.ink },
+  logoSub: { fontSize: 10.5, fontWeight: 600, color: C.orange, marginTop: 2 },
+  headerStat: { textAlign: "right", minWidth: 80 },
+  headerStatNum: { fontWeight: 800, fontSize: 18, color: C.orange },
+  slash: { color: "#c9b5a8", fontSize: 13, fontWeight: 600 },
+  headerBar: { height: 6, background: "#f3ddd0", borderRadius: 6, marginTop: 3, overflow: "hidden" },
+  headerBarFill: { height: "100%", background: `linear-gradient(90deg,${C.orangeLight},${C.orange})`, borderRadius: 6, transition: "width .6s ease" },
+  hero: { background: `linear-gradient(135deg,${C.orangeLight},${C.orange})`, borderRadius: 22, padding: "20px 18px", color: "#fff", display: "flex", gap: 16, alignItems: "center", boxShadow: "0 10px 26px rgba(232,93,47,.3)", marginBottom: 16 },
+  heroRing: { position: "relative", flexShrink: 0, width: 132, height: 132, display: "grid", placeItems: "center" },
+  heroRingText: { position: "absolute", textAlign: "center", lineHeight: 1 },
+  heroPct: { fontSize: 34, fontWeight: 800 },
+  heroPctLabel: { fontSize: 12, fontWeight: 600, marginTop: 4, opacity: .9 },
+  heroInfo: { flex: 1 },
+  heroTitle: { fontSize: 19, fontWeight: 800, margin: "0 0 12px", whiteSpace: "pre-line", lineHeight: 1.4 },
+  heroChips: { display: "flex", flexWrap: "wrap", gap: 6 },
+  chipKnown: { background: "rgba(255,255,255,.95)", color: C.orange, fontWeight: 700, fontSize: 12, padding: "5px 10px", borderRadius: 20 },
+  chipLearn: { background: "rgba(255,255,255,.25)", color: "#fff", fontWeight: 700, fontSize: 12, padding: "5px 10px", borderRadius: 20 },
+  chipRest: { background: "rgba(255,255,255,.15)", color: "#fff", fontWeight: 700, fontSize: 12, padding: "5px 10px", borderRadius: 20 },
+  card: { background: C.cream, borderRadius: 18, padding: 18, marginBottom: 16, boxShadow: "0 4px 16px rgba(180,120,90,.1)", border: `1px solid ${C.line}` },
+  cardTitle: { fontSize: 16, fontWeight: 800, margin: "0 0 12px", color: C.ink },
+  segGroup: { display: "flex", flexDirection: "column", gap: 8 },
+  segOn: { padding: "12px 14px", borderRadius: 12, border: `2px solid ${C.orange}`, background: "#fff1ea", color: C.orange, fontWeight: 800, fontSize: 14.5, textAlign: "left" },
+  segOff: { padding: "12px 14px", borderRadius: 12, border: `2px solid ${C.line}`, background: "#fff", color: "#8a7568", fontWeight: 700, fontSize: 14.5, textAlign: "left" },
+  segWrap: { display: "flex", flexWrap: "wrap", gap: 8 },
+  pillOn: { padding: "8px 14px", borderRadius: 20, border: `2px solid ${C.orange}`, background: C.orange, color: "#fff", fontWeight: 800, fontSize: 13.5 },
+  pillOff: { padding: "8px 14px", borderRadius: 20, border: `2px solid ${C.line}`, background: "#fff", color: "#8a7568", fontWeight: 700, fontSize: 13.5 },
+  countNote: { marginTop: 14, fontSize: 14, fontWeight: 600, color: "#6b5648" },
+  actionGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 14 },
+  bigAction: { border: "none", borderRadius: 18, padding: "20px 14px", color: "#fff", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, boxShadow: "0 8px 20px rgba(180,120,90,.25)" },
+  bigActionIcon: { fontSize: 34 },
+  bigActionTitle: { fontSize: 16, fontWeight: 800 },
+  bigActionDesc: { fontSize: 11.5, opacity: .9, fontWeight: 600, textAlign: "center" },
+  resetBtn: { display: "block", margin: "8px auto 0", background: "none", border: "none", color: "#bda494", fontSize: 13, fontWeight: 600, textDecoration: "underline" },
+  topBar: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 12, border: `2px solid ${C.line}`, background: "#fff", fontSize: 20, color: C.orange, fontWeight: 800 },
+  topTitle: { fontSize: 16, fontWeight: 800, color: C.ink },
+  progRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 14 },
+  progText: { fontSize: 13, fontWeight: 800, color: C.orange, whiteSpace: "nowrap" },
+  progBar: { flex: 1, height: 8, background: "#f3ddd0", borderRadius: 8, overflow: "hidden" },
+  progBarFill: { height: "100%", background: `linear-gradient(90deg,${C.orangeLight},${C.orange})`, borderRadius: 8, transition: "width .4s ease" },
+  cardScene: { perspective: 1200, marginBottom: 16, cursor: "pointer" },
+  flipCard: { position: "relative", width: "100%", minHeight: 340, transformStyle: "preserve-3d", transition: "transform .5s cubic-bezier(.4,.2,.2,1)" },
+  faceFront: { position: "absolute", inset: 0, backfaceVisibility: "hidden", background: "#fff", borderRadius: 20, border: `2px solid ${C.line}`, boxShadow: "0 8px 24px rgba(180,120,90,.15)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: 24, gap: 12, minHeight: 340 },
+  faceBack: { position: "absolute", inset: 0, backfaceVisibility: "hidden", transform: "rotateY(180deg)", background: "linear-gradient(160deg,#fff,#fff4ee)", borderRadius: 20, border: `2px solid ${C.orange}`, boxShadow: "0 8px 24px rgba(232,93,47,.18)", display: "flex", flexDirection: "column", justifyContent: "center", padding: "24px 20px 40px", gap: 12, minHeight: 340 },
+  posTag: { background: "#fff1ea", color: C.orange, fontWeight: 800, fontSize: 12, padding: "4px 12px", borderRadius: 20 },
+  cardWord: { fontSize: 26, fontWeight: 800, color: C.ink, textAlign: "center", lineHeight: 1.3 },
+  tapHint: { position: "absolute", bottom: 14, left: 0, right: 0, textAlign: "center", fontSize: 12, color: "#c4ab9b", fontWeight: 600 },
+  badgeKnown: { background: C.teal, color: "#fff", fontWeight: 700, fontSize: 12, padding: "3px 10px", borderRadius: 14 },
+  badgeLearn: { background: "#f0c44a", color: "#5a4500", fontWeight: 700, fontSize: 12, padding: "3px 10px", borderRadius: 14 },
+  backMeaning: { fontSize: 18, fontWeight: 800, color: C.orange, lineHeight: 1.4, width: "100%" },
+  backEx: { background: "#fff", borderRadius: 12, padding: "12px 14px", border: `1px solid ${C.line}`, display: "flex", flexDirection: "column", gap: 10 },
+  dialogRow: { display: "flex", gap: 8, alignItems: "flex-start" },
+  spkA: { flexShrink: 0, width: 22, height: 22, borderRadius: 11, background: "#fff1ea", color: C.orange, fontWeight: 800, fontSize: 12, display: "grid", placeItems: "center", marginTop: 2 },
+  spkB: { flexShrink: 0, width: 22, height: 22, borderRadius: 11, background: "#e6f5f3", color: C.teal, fontWeight: 800, fontSize: 12, display: "grid", placeItems: "center", marginTop: 2 },
+  dialogEn: { fontWeight: 700, color: C.ink, fontSize: 14.5, lineHeight: 1.4 },
+  dialogJa: { color: "#7a6557", fontSize: 13, marginTop: 2, lineHeight: 1.4 },
+  backNote: { fontSize: 12.5, color: "#8a7568", background: "#fffaf6", borderRadius: 10, padding: "8px 12px", lineHeight: 1.5, border: `1px dashed ${C.line}` },
+  studyBtnRow: { display: "grid", gridTemplateColumns: "1fr 1.4fr", gap: 10, marginBottom: 10 },
+  btnLearn: { padding: "15px", borderRadius: 14, border: `2px solid #f0c44a`, background: "#fff8e6", color: "#9a7400", fontWeight: 800, fontSize: 15 },
+  btnKnown: { padding: "15px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,#3aa9a0,${C.teal})`, color: "#fff", fontWeight: 800, fontSize: 16, boxShadow: "0 6px 16px rgba(31,125,118,.3)" },
+  navRow: { display: "flex", gap: 10 },
+  navBtn: { flex: 1, padding: "12px", borderRadius: 12, border: `2px solid ${C.line}`, background: "#fff", color: "#8a7568", fontWeight: 700, fontSize: 14 },
+  startBtn: { display: "block", width: "100%", padding: "17px", borderRadius: 16, border: "none", background: `linear-gradient(135deg,#3aa9a0,${C.teal})`, color: "#fff", fontWeight: 800, fontSize: 17, boxShadow: "0 8px 20px rgba(31,125,118,.3)", margin: "4px 0 12px" },
+  quizPrompt: { background: "#fff", borderRadius: 18, border: `2px solid ${C.line}`, padding: "26px 18px", textAlign: "center", marginBottom: 16, boxShadow: "0 6px 18px rgba(180,120,90,.12)" },
+  quizPromptSub: { fontSize: 13, color: "#a98a78", fontWeight: 600, marginBottom: 8 },
+  quizPromptMain: { fontSize: 22, fontWeight: 800, color: C.ink, lineHeight: 1.35 },
+  quizQ: { marginTop: 10, fontSize: 13, color: C.teal, fontWeight: 700 },
+  optGrid: { display: "flex", flexDirection: "column", gap: 10 },
+  optBtn: { padding: "16px 18px", borderRadius: 14, border: `2px solid ${C.line}`, background: "#fff", color: C.ink, fontWeight: 700, fontSize: 14.5, textAlign: "left", position: "relative", transition: "all .15s" },
+  optCorrect: { padding: "16px 18px", borderRadius: 14, border: `2px solid ${C.teal}`, background: "#e6f5f3", color: C.teal, fontWeight: 800, fontSize: 14.5, textAlign: "left", position: "relative" },
+  optWrong: { padding: "16px 18px", borderRadius: 14, border: `2px solid #e0573f`, background: "#fdeae5", color: "#c0432d", fontWeight: 800, fontSize: 14.5, textAlign: "left", position: "relative" },
+  optDim: { padding: "16px 18px", borderRadius: 14, border: `2px solid ${C.line}`, background: "#faf4f0", color: "#bba99c", fontWeight: 600, fontSize: 14.5, textAlign: "left", position: "relative" },
+  optIcon: { position: "absolute", right: 16, top: "50%", transform: "translateY(-50%)", fontSize: 18, fontWeight: 800 },
+  quizFeedback: { marginTop: 16 },
+  fbCorrect: { fontSize: 18, fontWeight: 800, color: C.teal, textAlign: "center", marginBottom: 10 },
+  fbWrong: { fontSize: 18, fontWeight: 800, color: "#c0432d", textAlign: "center", marginBottom: 10 },
+  fbCard: { background: "#fff", borderRadius: 14, border: `1px solid ${C.line}`, padding: "14px 16px", lineHeight: 1.5 },
+  nextBig: { display: "block", width: "100%", marginTop: 14, padding: "16px", borderRadius: 14, border: "none", background: `linear-gradient(135deg,${C.orangeLight},${C.orange})`, color: "#fff", fontWeight: 800, fontSize: 16, boxShadow: "0 6px 16px rgba(232,93,47,.3)" },
+  resultScore: { fontSize: 52, fontWeight: 800, color: C.orange, marginTop: 8 },
+  resultPct: { fontSize: 17, fontWeight: 700, color: "#8a7568" },
+  resultMsg: { fontSize: 16, fontWeight: 700, color: C.ink, marginTop: 12 },
+  wrongRow: { display: "flex", alignItems: "center", padding: "10px 0", borderBottom: `1px solid ${C.line}` },
+  footer: { textAlign: "center", fontSize: 11.5, color: "#c4ab9b", marginTop: 18, padding: "0 16px" },
+};
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<App />);
+
+</script>
+</body>
+</html>
